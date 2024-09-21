@@ -4,6 +4,8 @@ import { z } from "zod";
 import * as bcrypt from "bcryptjs";
 import prisma from "@/lib/db";
 import { getUserByEmail } from "@/data/user";
+import { generateVerificationToken } from "@/lib/token";
+import { sendVerificationEmail } from "@/lib/mail";
 
 const register = async (values: z.infer<typeof RegisterSchema>) => {
   const validatedFields = RegisterSchema.safeParse(values);
@@ -33,10 +35,12 @@ const register = async (values: z.infer<typeof RegisterSchema>) => {
     },
   });
 
-  // TODO: Sent Verification Email
+  const verificationToken = await generateVerificationToken(email);
+
+  await sendVerificationEmail(verificationToken.email, verificationToken.token);
 
   return {
-    success: "User Created",
+    success: "Confirmation Email Sent",
   };
 };
 

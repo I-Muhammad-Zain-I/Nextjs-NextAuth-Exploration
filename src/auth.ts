@@ -45,17 +45,25 @@ export const {
     },
   },
   callbacks: {
-    // async signIn({ user }) {
-    //   const existingUser = await getUserById(user.id);
+    async signIn({ user, account }) {
+      console.log({
+        user,
+        account,
+      });
 
-    //   /**
-    //    * If email is not verified then user cannot sign in
-    //    */
-    //   if (!existingUser || !existingUser.emailVerified) {
-    //     return false;
-    //   }
-    //   return true;
-    // },
+      // Allow OAuth without email verification
+      if (account?.provider !== "credentials") return true;
+
+      const existingUser = await getUserById(user.id);
+
+      // Prevent sigin if email is not verified
+      if (!existingUser?.emailVerified) return false;
+
+      /**
+       * If email is not verified then user cannot sign in
+       */
+      return true;
+    },
     async session({ token, session }) {
       /**
        * extending session which in turn extends the token and
