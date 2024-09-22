@@ -17,4 +17,16 @@ const RegisterSchema = z.object({
   }),
 });
 
-export { LoginSchema, RegisterSchema };
+const ResetSchema = z.object({
+  email: z.string().email({
+    message: "Email is required",
+  }),
+});
+
+const NewPasswordSchema = z.object({
+  password: z.string().min(6, {
+    message: "Minimum 6 characters required",
+  }),
+});
+
+export { LoginSchema, RegisterSchema, ResetSchema, NewPasswordSchema };
