@@ -3,6 +3,7 @@ import authConfig from "./auth.config";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "./lib/db";
 import { getUserById } from "./data/user";
+import { getTwoFactorConfirmationByUserId } from "./data/two-factor-confirmation";
 
 declare module "next-auth" {
   interface Session {
@@ -46,11 +47,6 @@ export const {
   },
   callbacks: {
     async signIn({ user, account }) {
-      console.log({
-        user,
-        account,
-      });
-
       // Allow OAuth without email verification
       if (account?.provider !== "credentials") return true;
 
@@ -58,6 +54,21 @@ export const {
 
       // Prevent sigin if email is not verified
       if (!existingUser?.emailVerified) return false;
+
+      // Checking if 2FA is enabled
+      if (existingUser?.isTwoFactorEnabled) {
+        const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(
+          existingUser.id
+        );
+
+        console.log({ twoFactorConfirmation });
+        if (!twoFactorConfirmation) return false;
+
+        // Delete two factor confirmation for next time ->  So user would need to do 2FA again
+        await prisma.twoFactorConfirmation.delete({
+          where: { id: twoFactorConfirmation.id },
+        });
+      }
 
       /**
        * If email is not verified then user cannot sign in
